@@ -2,7 +2,7 @@ const { createVideoFromImages } = require('../services/cloudinaryService');
 
 // Create video slideshow handler
 const createSlideshowHandler = async (req, res) => {
-  const { imageUrls } = req.body;
+  const { imageUrls, public_id } = req.body;
   console.log(imageUrls)
   // Validate imageUrls input
   if (!imageUrls || !Array.isArray(imageUrls) || imageUrls.length === 0) {
@@ -12,9 +12,11 @@ const createSlideshowHandler = async (req, res) => {
     });
   }
 
+  
+
   try {
     // Generate video from image URLs
-    const videoUrl = await createVideoFromImages(imageUrls);
+    const videoUrl = await createVideoFromImages(imageUrls, public_id);
     
     // Return the generated video URL
     return res.status(200).json({ success: true, videoUrl });

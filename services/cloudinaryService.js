@@ -55,45 +55,44 @@ const checkVideoStatus = async (public_id) => {
   });
 };
 
-const createVideoFromImages = async (imagePublicIds) => {
+const createVideoFromImages = async (imageUrls, public_id) => {
   try {
+    const mappedImageUrls = imageUrls.map(url => {
+      // const publicId = url.split('/').slice(-2).join('/').split('.')[0]; // Extract public_id from URL
+      // return { media: `i:${publicId}` };
+      const publicId = url.split('/').slice(-1)[0].split('.')[0]; // Extract public_id from URL
+      return { media: `i:${publicId}` };
+    });
+
+    console.log(mappedImageUrls);
+
+
     const manifest = {
       "w": 500,
       "h": 500,
-      "du": 20,  // Total duration in seconds
-      "fps": 30, // Frames per second
-      "tracks": [
-        {
-          "width": 500,
-          "height": 500,
-          "x": 0,
-          "y": 0,
-          "clipDefaults": {
-            "clipDuration": 3000, // Duration of each clip in milliseconds
-            "transitionDuration": 1000, // Duration of transition in milliseconds
-            "transition": "fade" // You can use different transitions like circlecrop, slide, fade, etc.
-          },
-          "clips": imagePublicIds.map(publicId => ({
-            "media": publicId,
-            "type": "image",
-            "transformation": "c_fill"
-          }))
-        }
-      ]
-    };
+      "du": 4*mappedImageUrls.length,  // Total video duration (seconds)
+      "vars": {
+        "sdur": 3000,  // Duration of each slide (milliseconds)
+        "tdur": 1000,  // Transition duration between slides (milliseconds)
+        "slides": mappedImageUrls
+      }
+    }
 
+    
     // Use Cloudinary's create_slideshow API
     const result = await cloudinary.uploader.create_slideshow({
       manifest_json: JSON.stringify(manifest),
-      public_id: 'sanjiv_testing1'
+      public_id: public_id
     });
 
+    console.log(public_id);
+
     const secureUrl = await checkVideoStatus(result.public_id);
-    console.log('Video ready:', secureUrl);
-    return secureUrl;
+    console.log(secureUrl);
+    // return secureUrl;
 
     // console.log(result);
-    // return result.secure_url; // Return the result of the slideshow creation
+    return secureUrl; // Return the result of the slideshow creation
   } catch (error) {
     console.error('Error creating slideshow:', error);
     throw new Error('Error creating slideshow: ' + error.message);
@@ -101,18 +100,7 @@ const createVideoFromImages = async (imagePublicIds) => {
 };
 
 // Example usage
-const imagePublicIds = [
-  "https://res.cloudinary.com/dhd2t66jk/image/upload/v1728010599/yqmcaw1sujt035yazoxs.jpg",  // Replace with your image's public_id
-  "https://res.cloudinary.com/dhd2t66jk/image/upload/v1728010645/kkdfxu0mxptimri3rdwi.jpg"   // Replace with your image's public_id
-];
 
-createVideoFromImages(imagePublicIds)
-  .then((videoUrl) => {
-    console.log('Generated video:', videoUrl);
-  })
-  .catch((error) => {
-    console.error('Error creating video slideshow:', error);
-  });
 
 
 module.exports = { uploadImage, createVideoFromImages };
